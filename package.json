@@ -1,0 +1,44 @@
+{
+  "name": "laravel-mix-nunjucks",
+  "version": "0.1.0",
+  "description": "Laravel Mix extension to compile Nunjucks templates",
+  "author": "moyu <moyuboy@gmail.com> (https://moyu.io)",
+  "license": "MIT",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moyus/laravel-mix-nunjucks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/moyus/laravel-mix-nunjucks/issues"
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "laravel",
+    "mix",
+    "nunjucks"
+  ],
+  "scripts": {
+    "test": "node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "test:watch": "npm run test -- --watch",
+    "test:poll": "npm run test:watch -- --watch-poll"
+  },
+  "peerDependencies": {
+    "laravel-mix": "^5.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^3.3.1",
+    "front-matter": "^3.1.0",
+    "fs-extra": "^8.1.0",
+    "globby": "^11.0.0",
+    "marked": "^0.8.0",
+    "nunjucks": "^3.2.0"
+  },
+  "devDependencies": {
+    "laravel-mix": "^5.0.1"
+  }
+}
