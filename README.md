@@ -15,8 +15,6 @@ This extension performs following tasks
 - If file is markdown, render markdown first
 - Finally, render nunjucks to html
 
-Then, require it in your `webpack.mix.js` file
-
 ## Usage
 
 ```javascript
