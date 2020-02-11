@@ -21,7 +21,7 @@ This extension performs following tasks
 const mix = require('laravel-mix')
 require('laravel-mix-nunjucks')
 
-mix.njk('resources/views/**/*', 'public/', {
+mix.njk('resources/views/', 'public/', {
   // ext: '.html',
   // data: {},
   // marked: null,
