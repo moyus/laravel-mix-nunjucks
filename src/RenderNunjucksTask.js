@@ -8,6 +8,7 @@ const Task = require('laravel-mix/src/tasks/Task');
 const File = require('laravel-mix/src/File');
 const FileCollection = require('laravel-mix/src/FileCollection');
 const Log = require('laravel-mix/src/Log');
+const NunjucksMixTag = require('./NunjucksMixTag');
 
 class RenderNunjucksTask extends Task {
   constructor (data) {
@@ -31,6 +32,7 @@ class RenderNunjucksTask extends Task {
     this.isBeingWatched = false;
     const loader = new nunjucks.FileSystemLoader(this.base, { noCache: true });
     this.compiler = new nunjucks.Environment(loader, this.options.envOptions);
+    this.compiler.addExtension('mix', new NunjucksMixTag());
     md.setOptions(this.options.marked);
 
     if (typeof this.options.manageEnv === 'function') {
@@ -99,12 +101,16 @@ class RenderNunjucksTask extends Task {
   }
 
   /**
-   * Render template to destination
+   * Render template to destination file
    * 
    * @param {File} src
    * @param {File} dest
    */
-  render(src, dest) {
+  async render(src, dest) {
+    // deplay template render to be sure that assets compile first
+    // so we can get versioned mainifest
+    await Promise.resolve();
+
     const data = Object.assign({}, this.options.data);
 
     let template = src.read();

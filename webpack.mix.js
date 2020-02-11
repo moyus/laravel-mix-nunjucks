@@ -11,10 +11,12 @@ require('./src/index');
  | file for your application, as well as bundling up your JS files.
  |
  */
-mix.njk('tests/src', 'tests/dist', {
-  // ext: '.html', // extension for compiled templates
-  // data: {}, // data passed to template
-  // marked: null, // custom options for marted
-  // envOptions: {}, // nunjucks environment
+mix.setPublicPath('tests/public');
+mix.version(['tests/public/test.css']);
+mix.njk('tests/src', 'tests/public', {
+  // ext: '.html',                // extension for compiled templates
+  // data: {},                    // data passed to template
+  // marked: null,                // custom options for marted
+  // envOptions: {},              // nunjucks environment
   // manageEnv: (compiler) => {}, // hook for managing environment before compliation
 });
