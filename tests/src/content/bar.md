@@ -1,5 +1,5 @@
 ---
-layout: master
+layout: "_layouts/master"
 title: "Bar"
 ---
 

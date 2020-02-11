@@ -2,44 +2,39 @@ const path = require('path');
 const nunjucks = require('nunjucks');
 const fm = require('front-matter');
 const md = require('marked');
-const fs = require('fs-extra');
 const globby = require('globby');
 const chokidar = require('chokidar');
 const Task = require('laravel-mix/src/tasks/Task');
+const File = require('laravel-mix/src/File');
+const FileCollection = require('laravel-mix/src/FileCollection');
+const Log = require('laravel-mix/src/Log');
 
 class RenderNunjucksTask extends Task {
   constructor (data) {
     super(data);
-    const options = this.options = Object.assign({
-      base: '',
-      path: '.',
+
+    this.options = Object.assign({
       ext: '.html',
       data: {},
       block: 'content',
       marked: null,
-      inheritExtension: false,
-      envOptions: {
-        watch: false,
-      },
+      envOptions: null,
       manageEnv: null,
-      loaders: null,
     }, data.options);
   
-    nunjucks.configure(options.envOptions);
+    this.from = new File(data.from);
+    this.to = new File(data.to);
+    this.files = new FileCollection(data.from);
+    this.base = this.from.isDirectory() ? this.from.path() : this.from.segments.base.split('*')[0];
 
-    if (!options.loaders) {
-      options.loaders = new nunjucks.FileSystemLoader(options.path);
-    }
-    
     this.watcher = null;
     this.isBeingWatched = false;
-    this.src = [data.src, '!' + this.options.path, '!_*'];
-    this.dest = data.dest;
-    this.compiler = new nunjucks.Environment(options.loaders, options.envOptions);
-    md.setOptions(options.marked);
+    const loader = new nunjucks.FileSystemLoader(this.base, { noCache: true });
+    this.compiler = new nunjucks.Environment(loader, this.options.envOptions);
+    md.setOptions(this.options.marked);
 
-    if (typeof options.manageEnv === 'function') {
-      options.manageEnv.call(null, this.compiler);
+    if (typeof this.options.manageEnv === 'function') {
+      this.options.manageEnv.call(null, this.compiler);
     }
   }
 
@@ -51,7 +46,9 @@ class RenderNunjucksTask extends Task {
     if (this.isBeingWatched) return;
 
     const options = { usePolling, ignored: /(^|[\/\\])\../ };
-    this.watcher = chokidar.watch(this.src, options).on('all', this.handle.bind(this));
+    this.watcher = chokidar.watch(this.data.from, options).on('all', (eventName, filePath) => {
+      this.handle(eventName, new File(filePath));
+    });
     this.isBeingWatched = true;
   }
 
@@ -60,39 +57,63 @@ class RenderNunjucksTask extends Task {
     this.watcher.close();
   }
 
-  handle(type, fromFileRelative) {
-    const { name, dir } = path.parse(fromFileRelative);
-    const fromFileAbsolute = path.resolve(fromFileRelative);
-    let subDir = this.options.base ? dir.split(this.options.base).pop() : '';
-    subDir = subDir.startsWith('/') ? subDir.slice(1) : subDir;
-    const toFileAbsolute = path.resolve(this.dest, subDir, name + this.options.ext);
+  /**
+   * Handle file change
+   * 
+   * @param {string} type
+   * @param {File} srcFile
+   */
+  handle(type, srcFile) {
+    let destFile = this.to;
+    const subDir = path.relative(this.base, srcFile.base());
+    const isPartial = subDir.startsWith('_');
+
+    if (destFile.isDirectory()) {
+      const name = srcFile.nameWithoutExtension();
+      destFile = this.to.append(path.join(subDir, name + this.options.ext));
+    }
 
     switch (type) {
       case 'change':
       case 'add':
-        this.render(fromFileAbsolute, toFileAbsolute);
-        break
+        if (isPartial) {
+          this.renderAll();
+        } else {
+          this.render(srcFile, destFile);
+        }
+        break;
       case 'unlink':
-        fs.unlinkSync(toFileAbsolute);
-        break
+        destFile.delete();
+        break;
     }
   }
 
+  /**
+   * Render all files except templates under _* directories
+   */
   renderAll() {
-    globby.sync(this.src, { onlyFiles: true })
-      .map(fromFileRelative => this.handle('add', fromFileRelative));
+    const patterns = [this.from.path(), '!' + path.join(this.base, '_**/*')];
+
+    globby.sync(patterns, { onlyFiles: true })
+      .map(filePath => this.handle('change', new File(filePath)));
   }
 
-  render(fileFrom, fileTo) {
+  /**
+   * Render template to destination
+   * 
+   * @param {File} src
+   * @param {File} dest
+   */
+  render(src, dest) {
     const data = Object.assign({}, this.options.data);
 
-    let template = fs.readFileSync(fileFrom, 'utf8');
+    let template = src.read();
 
     const frontmatter = fm(template);
 
     if (frontmatter.attributes && Object.keys(frontmatter.attributes).length) {
 
-      if (/\.md|\.markdown/.test(path.extname(fileFrom))) {
+      if (src.extension() === '.md') {
         template = md(frontmatter.body);
       }
 
@@ -101,12 +122,13 @@ class RenderNunjucksTask extends Task {
       if (data.page.layout) {
         template = '\{% extends \"' + data.page.layout + '.njk\" %\}\n\{% block ' +  this.options.block + ' %\}' + template + '\n\{% endblock %\}';
       } else {
-        console.warn(`No layout declared in ${fileFrom}`);
+        Log.info(`No layout declared in ${src.path()}`);
       }
     }
 
     const result = this.compiler.renderString(template, data);
-    fs.outputFileSync(fileTo, result);
+    dest.makeDirectories();
+    dest.write(result);
   }
 }
 

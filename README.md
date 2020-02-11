@@ -21,16 +21,20 @@ This extension performs following tasks
 const mix = require('laravel-mix')
 require('laravel-mix-nunjucks')
 
-mix.njk('resources/views', 'public', {
-  base: 'resources/views',
-  path: 'resources/views/_templates', // relative path to templates
-  // ext: '.html', // extension for compiled templates
-  // data: {}, // data passed to template
-  // marked: null, // custom options for marted http://github.com/chjj/marked
-  // envOptions: {}, // nunjucks environment https://mozilla.github.io/nunjucks/api.html#configure
-  // manageEnv: {}, // hook for managing environment before compliation
-  // loaders: [], // uses as first paramter to Environment constructor https://mozilla.github.io/nunjucks/api.html#environment
+mix.njk('resources/views/**/*', 'public/', {
+  // ext: '.html',
+  // data: {},
+  // marked: null,
+  // envOptions: null,
+  // manageEnv: (nunjucks) => {},
 })
 ```
+
+* `ext` - Extension for compiled templates, pass null or empty string if yo don't want any extension
+* `data` - Data passed to template
+* `block` - Name of content block in your parent template
+* `marked` - Custom options for [marked](http://github.com/chjj/marked)
+* `envOptions` - These are options provided for nunjucks Environment. More info [here](https://mozilla.github.io/nunjucks/api.html#configure).
+* `manageEnv` - Hook for managing environment before compilation. Useful for adding custom filters, globals, etc
 
 For more info about nunjucks, check [https://mozilla.github.io/nunjucks/api.html](https://mozilla.github.io/nunjucks/api.html)

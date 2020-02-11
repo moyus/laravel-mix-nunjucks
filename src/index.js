@@ -6,8 +6,8 @@ class Nunjucks {
     return ['nunjucks', 'njk'];
   }
 
-  register(src, dest, options = {}) {
-    Mix.addTask(new RenderNunjucksTask({ src, dest, options }));
+  register(from, to, options = {}) {
+    Mix.addTask(new RenderNunjucksTask({ from, to, options }));
   }
 }
 
