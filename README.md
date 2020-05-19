@@ -1,6 +1,8 @@
 # laravel-mix-nunjucks
 Laravel Mix extension to compile Nunjucks templates with markdown and front-matter support
 
+![npm](https://img.shields.io/npm/v/laravel-mix-nunjucks?style=flat-square)
+
 ## Install
 
 ```bash
