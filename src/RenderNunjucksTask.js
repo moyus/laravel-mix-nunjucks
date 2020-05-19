@@ -4,6 +4,7 @@ const fm = require('front-matter');
 const md = require('marked');
 const globby = require('globby');
 const chokidar = require('chokidar');
+const debounce = require('debounce');
 const Task = require('laravel-mix/src/tasks/Task');
 const File = require('laravel-mix/src/File');
 const FileCollection = require('laravel-mix/src/FileCollection');
@@ -22,6 +23,8 @@ class RenderNunjucksTask extends Task {
       envOptions: null,
       manageEnv: null,
     }, data.options);
+
+    this.renderAll = debounce(this.renderAll);
   
     this.from = new File(data.from);
     this.to = new File(data.to);
@@ -67,12 +70,12 @@ class RenderNunjucksTask extends Task {
    */
   handle(type, srcFile) {
     let destFile = this.to;
+    const name = srcFile.nameWithoutExtension();
     const subDir = path.relative(this.base, srcFile.base());
-    const isPartial = subDir.startsWith('_');
+    const isPartial = subDir.split('/').some(dir => dir.startsWith('_')) || name.startsWith('_');
 
     if (destFile.isDirectory()) {
-      const name = srcFile.nameWithoutExtension();
-      destFile = this.to.append(path.join(subDir, name + this.options.ext));
+      destFile = this.to.append(path.posix.join(subDir, name + this.options.ext));
     }
 
     switch (type) {
@@ -91,11 +94,14 @@ class RenderNunjucksTask extends Task {
   }
 
   /**
-   * Render all files except templates under _* directories
+   * Render all files except templates start with '_' or under '_*' directories
    */
   renderAll() {
-    const patterns = [this.from.path(), '!' + path.join(this.base, '_**/*')];
-
+    const patterns = [
+      this.from.path(),
+      '!' + path.posix.join(this.base, '**/_**/*'),
+      '!' + path.posix.join(this.base, '**/_*'),
+    ];
     globby.sync(patterns, { onlyFiles: true })
       .map(filePath => this.handle('change', new File(filePath)));
   }
