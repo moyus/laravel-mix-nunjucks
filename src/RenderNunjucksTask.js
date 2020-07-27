@@ -23,8 +23,6 @@ class RenderNunjucksTask extends Task {
       envOptions: null,
       manageEnv: null,
     }, data.options);
-
-    this.renderAll = debounce(this.renderAll);
   
     this.from = new File(data.from);
     this.to = new File(data.to);
@@ -112,10 +110,9 @@ class RenderNunjucksTask extends Task {
    * @param {File} src
    * @param {File} dest
    */
-  async render(src, dest) {
+  render(src, dest) {
     // deplay template render to be sure that assets compile first
     // so we can get versioned mainifest
-    await Promise.resolve();
 
     const data = Object.assign({}, this.options.data);
 
