@@ -1,6 +1,6 @@
 {
   "name": "laravel-mix-nunjucks",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Laravel Mix extension to compile Nunjucks templates",
   "author": "moyu <moyuboy@gmail.com> (https://moyu.io)",
   "license": "MIT",
@@ -28,7 +28,7 @@
     "test:poll": "npm run test:watch -- --watch-poll"
   },
   "peerDependencies": {
-    "laravel-mix": "^5.0.0"
+    "laravel-mix": "^6.0.0"
   },
   "dependencies": {
     "chokidar": "^3.4.0",
@@ -39,6 +39,6 @@
     "nunjucks": "^3.2.1"
   },
   "devDependencies": {
-    "laravel-mix": "^5.0.4"
+    "laravel-mix": "^6.0.13"
   }
 }
