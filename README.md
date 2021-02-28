@@ -14,6 +14,7 @@ npm install laravel-mix-nunjucks --save-dev
 
 This extension performs following tasks
 
+- Collect files name not start with `_` or under `_*` directory
 - Extract front-matter data and assigns to a `page` variable
 - If file is markdown, render markdown first
 - Finally, render nunjucks to html
