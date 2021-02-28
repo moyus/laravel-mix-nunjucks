@@ -1,8 +1,8 @@
-const nunjucks = require('nunjucks');
+const nunjucks = require("nunjucks");
 
 class NunjucksMixTag {
   constructor() {
-    this.tags = ['mix'];
+    this.tags = ["mix"];
   }
 
   parse(parser, nodes) {
@@ -13,12 +13,12 @@ class NunjucksMixTag {
     parser.advanceAfterBlockEnd(tok.value);
 
     // If arguments, return the fileTag constructed node
-    return new nodes.CallExtension(this, 'run', args);
+    return new nodes.CallExtension(this, "run", args);
   }
 
   run(context, file) {
     const assets = Mix.manifest.get();
-    return new nunjucks.runtime.SafeString(assets[file] || '');
+    return new nunjucks.runtime.SafeString(assets[file] || "");
   }
 }
 
