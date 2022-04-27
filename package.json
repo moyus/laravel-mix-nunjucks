@@ -31,10 +31,10 @@
     "laravel-mix": "^6.0.0"
   },
   "dependencies": {
-    "chokidar": "^3.5.1",
+    "chokidar": "^3.5.3",
     "front-matter": "^4.0.2",
     "globby": "^11.0.2",
-    "marked": "^2.0.0",
+    "marked": "^4.0.14",
     "nunjucks": "^3.2.3"
   },
   "devDependencies": {
