@@ -1,7 +1,7 @@
 const path = require("path");
 const nunjucks = require("nunjucks");
 const fm = require("front-matter");
-const md = require("marked");
+const { marked } = require("marked");
 const globby = require("globby");
 const chokidar = require("chokidar");
 const File = require("laravel-mix/src/File");
@@ -39,7 +39,7 @@ class NunjucksTask {
     const loader = new nunjucks.FileSystemLoader(this.base, { noCache: true });
     this.compiler = new nunjucks.Environment(loader, this.options.envOptions);
     this.compiler.addExtension("mix", new NunjucksMixTag());
-    md.setOptions(this.options.marked);
+    marked.setOptions(this.options.marked);
 
     if (typeof this.options.manageEnv === "function") {
       this.options.manageEnv.call(null, this.compiler);
@@ -75,7 +75,7 @@ class NunjucksTask {
   isPartialFile(file) {
     return path
       .relative(this.base, file.path())
-      .split("/")
+      .split(path.sep)
       .some((name) => name.startsWith("_"));
   }
 
@@ -86,8 +86,8 @@ class NunjucksTask {
   run() {
     const patterns = [
       this.from.path(),
-      "!" + path.join(this.base, "**/_**/*"),
-      "!" + path.join(this.base, "**/_*"),
+      "!" + path.join(this.base, `**${path.sep}_**${path.sep}*`),
+      "!" + path.join(this.base, `**${path.sep}_*`),
     ];
 
     const files = globby.sync(patterns, { onlyFiles: true });
@@ -175,7 +175,7 @@ class NunjucksTask {
 
     if (frontmatter.attributes && Object.keys(frontmatter.attributes).length) {
       if (srcFile.extension() === ".md") {
-        template = md(frontmatter.body);
+        template = marked(frontmatter.body);
       }
 
       Object.assign(data, { page: frontmatter.attributes });
