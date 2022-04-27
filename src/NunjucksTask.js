@@ -18,6 +18,7 @@ class NunjucksTask {
     this.data = data;
     this.from = new File(data.from);
     this.to = new File(data.to);
+    this.assets = [];
     this.options = Object.assign(
       {
         ext: ".html",
@@ -46,6 +47,39 @@ class NunjucksTask {
   }
 
   /**
+   * Compile template file
+   *
+   * @param {File} srcFile
+   * @returns {File} distFile
+   */
+  getDistFile(srcFile) {
+    let distFile = this.to;
+    if (distFile.isDirectory()) {
+      distFile = distFile.append(
+        path.join(
+          path.relative(this.base, srcFile.base()),
+          srcFile.nameWithoutExtension() + this.options.ext
+        )
+      );
+    }
+
+    return distFile;
+  }
+
+  /**
+   * Compile template file
+   *
+   * @param {File} file
+   * @returns {boolean}
+   */
+  isPartialFile(file) {
+    return path
+      .relative(this.base, file.path())
+      .split("/")
+      .some((name) => name.startsWith("_"));
+  }
+
+  /**
    * Run the task and render all files
    * except name start with '_'
    */
@@ -57,7 +91,14 @@ class NunjucksTask {
     ];
 
     const files = globby.sync(patterns, { onlyFiles: true });
-    files.forEach((filePath) => this.onChange(filePath));
+    this.assets = files.map((filePath) => {
+      const srcFile = new File(filePath);
+      const distFile = this.getDistFile(srcFile);
+
+      this.compile(srcFile, distFile);
+
+      return distFile;
+    });
   }
 
   /**
@@ -91,20 +132,8 @@ class NunjucksTask {
    */
   onChange(updatedFilePath, type = "change") {
     const srcFile = new File(updatedFilePath);
-    let distFile = this.to;
-    if (distFile.isDirectory()) {
-      distFile = distFile.append(
-        path.join(
-          path.relative(this.base, srcFile.base()),
-          srcFile.nameWithoutExtension() + this.options.ext
-        )
-      );
-    }
-
-    const isPartial = path
-      .relative(this.base, updatedFilePath)
-      .split("/")
-      .some((name) => name.startsWith("_"));
+    const distFile = this.getDistFile(srcFile);
+    const isPartial = this.isPartialFile(srcFile);
 
     switch (type) {
       case "change":
@@ -112,6 +141,9 @@ class NunjucksTask {
         if (isPartial) {
           this.run();
         } else {
+          Log.feedback(
+            `Compiling ${srcFile.relativePath()} to ${distFile.relativePath()}`
+          );
           this.compile(srcFile, distFile);
         }
         break;
@@ -158,7 +190,7 @@ class NunjucksTask {
           template +
           "\n{% endblock %}";
       } else {
-        Log.info(`No layout declared in ${src.path()}`);
+        Log.info(`No layout declared in ${srcFile.relativePath()}`);
       }
     }
 
