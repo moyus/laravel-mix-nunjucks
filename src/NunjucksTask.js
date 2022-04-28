@@ -50,7 +50,7 @@ class NunjucksTask {
    * Compile template file
    *
    * @param {File} srcFile
-   * @returns {File} distFile
+   * @returns {File}
    */
   getDistFile(srcFile) {
     let distFile = this.to;
@@ -67,7 +67,7 @@ class NunjucksTask {
   }
 
   /**
-   * Compile template file
+   * Check whether is partial file
    *
    * @param {File} file
    * @returns {boolean}
