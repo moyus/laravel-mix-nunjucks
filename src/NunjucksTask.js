@@ -84,10 +84,11 @@ class NunjucksTask {
    * except name start with '_'
    */
   run() {
+    // glob patterns can only contain forward-slashes, not backward-slashes
     const patterns = [
-      this.from.path(),
-      "!" + path.join(this.base, `**${path.sep}_**${path.sep}*`),
-      "!" + path.join(this.base, `**${path.sep}_*`),
+      this.from.path().replace(/\\/g, '/'),
+      "!" + path.posix.join(this.base, `**/_**/*`),
+      "!" + path.posix.join(this.base, `**/_*`),
     ];
 
     const files = globby.sync(patterns, { onlyFiles: true });
