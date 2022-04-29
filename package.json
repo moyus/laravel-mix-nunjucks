@@ -1,6 +1,6 @@
 {
   "name": "laravel-mix-nunjucks",
-  "version": "1.2.0-beta.2",
+  "version": "1.2.0",
   "description": "Laravel Mix extension to compile Nunjucks templates",
   "author": "moyu <moyuboy@gmail.com> (https://moyu.io)",
   "license": "MIT",
