@@ -22,4 +22,4 @@ class Nunjucks {
   }
 }
 
-mix.extend("njk", Nunjucks);
+mix.extend("njk", new Nunjucks());
