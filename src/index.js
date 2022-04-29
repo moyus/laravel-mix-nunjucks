@@ -1,8 +1,8 @@
 const mix = require("laravel-mix");
-const { Component } = require("laravel-mix/src/components/Component");
+const Mix = require("laravel-mix/src/Mix");
 const NunjucksTask = require("./NunjucksTask");
 
-class Nunjucks extends Component {
+class Nunjucks {
   /**
    * The API name for the component
    */
@@ -18,7 +18,7 @@ class Nunjucks extends Component {
    * @param {object} options
    */
   register(from, to, options = {}) {
-    this.context.addTask(new NunjucksTask({ from, to, options }));
+    Mix.primary.addTask(new NunjucksTask({ from, to, options }));
   }
 }
 
