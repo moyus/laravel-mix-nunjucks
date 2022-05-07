@@ -149,15 +149,11 @@ class NunjucksTask {
         }
         break;
       case "unlink":
+      case "unlinkDir":
         if (isPartial) {
           this.run();
         } else {
-          destFile.delete();
-        }
-        break;
-      case "unlinkDir":
-        if (!isPartial) {
-          destFile.delete();
+          distFile.delete();
         }
         break;
     }
