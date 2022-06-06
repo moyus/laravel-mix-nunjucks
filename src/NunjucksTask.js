@@ -87,7 +87,7 @@ class NunjucksTask {
     // glob patterns can only contain forward-slashes, not backward-slashes
     const patterns = [
       this.from.path().replace(/\\/g, '/'),
-      "!" + path.posix.join(this.base, `**/_**/*`),
+      "!" + path.posix.join(this.base, `**/_**/**/*`),
       "!" + path.posix.join(this.base, `**/_*`),
     ];
 
