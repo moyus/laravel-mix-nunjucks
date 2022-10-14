@@ -6,6 +6,7 @@ const globby = require("globby");
 const chokidar = require("chokidar");
 const File = require("laravel-mix/src/File");
 const Log = require("laravel-mix/src/Log");
+const Mix = require("laravel-mix/src/Mix");
 const NunjucksMixTag = require("./NunjucksMixTag");
 
 class NunjucksTask {
@@ -84,21 +85,31 @@ class NunjucksTask {
    * except name start with '_'
    */
   run() {
-    // glob patterns can only contain forward-slashes, not backward-slashes
-    const patterns = [
-      this.from.path().replace(/\\/g, '/'),
-      "!" + path.posix.join(this.base, `**/_**/**/*`),
-      "!" + path.posix.join(this.base, `**/_*`),
-    ];
+    // @HACK:
+    // custom task runs before mainifest version, we need to delay template compiling
+    // to be sure of geting the right versioned mainifest
+    Mix.primary.listen("build", (stats) => {
+      // glob patterns can only contain forward-slashes, not backward-slashes
+      const patterns = [
+        this.from.path().replace(/\\/g, "/"),
+        "!" + path.join(this.base, `**/_**/**/*`).replace(/\\/g, "/"),
+        "!" + path.join(this.base, `**/_*`).replace(/\\/g, "/"),
+      ];
 
-    const files = globby.sync(patterns, { onlyFiles: true });
-    this.assets = files.map((filePath) => {
-      const srcFile = new File(filePath);
-      const distFile = this.getDistFile(srcFile);
+      const files = globby.sync(patterns, { onlyFiles: true });
 
-      this.compile(srcFile, distFile);
+      files.forEach((filePath) => {
+        const srcFile = new File(filePath);
+        const distFile = this.getDistFile(srcFile);
 
-      return distFile;
+        // Update the Webpack assets list for better terminal output.
+        stats.compilation.assets[distFile.pathFromPublic()] = {
+          size: () => distFile.size(),
+          emitted: true,
+        };
+
+        this.compile(srcFile, distFile);
+      });
     });
   }
 

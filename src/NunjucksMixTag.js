@@ -6,11 +6,11 @@ class NunjucksMixTag {
   }
 
   parse(parser, nodes) {
-    var tok = parser.nextToken();
+    var token = parser.nextToken();
 
     // Parse the markdown tag and collect any arguments
     var args = parser.parseSignature(null, true);
-    parser.advanceAfterBlockEnd(tok.value);
+    parser.advanceAfterBlockEnd(token.value);
 
     // If arguments, return the fileTag constructed node
     return new nodes.CallExtension(this, "run", args);
@@ -18,7 +18,7 @@ class NunjucksMixTag {
 
   run(context, file) {
     const assets = Mix.manifest.get();
-    return new nunjucks.runtime.SafeString(assets[file] || "");
+    return new nunjucks.runtime.SafeString(assets[file] || file);
   }
 }
 
