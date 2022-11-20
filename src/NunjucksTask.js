@@ -89,26 +89,12 @@ class NunjucksTask {
     // custom task runs before mainifest version, we need to delay template compiling
     // to be sure of geting the right versioned mainifest
     Mix.primary.listen("build", (stats) => {
-      // glob patterns can only contain forward-slashes, not backward-slashes
-      const patterns = [
-        this.from.path().replace(/\\/g, "/"),
-        "!" + path.join(this.base, `**/_**/**/*`).replace(/\\/g, "/"),
-        "!" + path.join(this.base, `**/_*`).replace(/\\/g, "/"),
-      ];
-
-      const files = globby.sync(patterns, { onlyFiles: true });
-
-      files.forEach((filePath) => {
-        const srcFile = new File(filePath);
-        const distFile = this.getDistFile(srcFile);
-
+      this.build().forEach((file) => {
         // Update the Webpack assets list for better terminal output.
-        stats.compilation.assets[distFile.pathFromPublic()] = {
-          size: () => distFile.size(),
+        stats.compilation.assets[file.pathFromPublic()] = {
+          size: () => file.size(),
           emitted: true,
         };
-
-        this.compile(srcFile, distFile);
       });
     });
   }
@@ -121,7 +107,7 @@ class NunjucksTask {
   watch(usePolling = false) {
     if (this.isBeingWatched) return;
 
-    const options = { usePolling, ignored: /(^|[\/\\])\../ };
+    const options = { usePolling, ignored: /(^|[\/\\])\../, ignoreInitial: true };
     this.watcher = chokidar
       .watch(this.data.from, options)
       .on("all", (eventName, filePath) => {
@@ -151,23 +137,40 @@ class NunjucksTask {
       case "change":
       case "add":
         if (isPartial) {
-          this.run();
+          this.build();
         } else {
-          Log.feedback(
-            `Compiling ${srcFile.relativePath()} to ${distFile.relativePath()}`
-          );
           this.compile(srcFile, distFile);
         }
         break;
       case "unlink":
       case "unlinkDir":
         if (isPartial) {
-          this.run();
+          this.build();
         } else {
           distFile.delete();
         }
         break;
     }
+  }
+
+  build() {
+    // glob patterns can only contain forward-slashes, not backward-slashes
+    const patterns = [
+      this.from.path().replace(/\\/g, "/"),
+      "!" + path.join(this.base, `**/_**/**/*`).replace(/\\/g, "/"),
+      "!" + path.join(this.base, `**/_*`).replace(/\\/g, "/"),
+    ];
+
+    const files = globby.sync(patterns, { onlyFiles: true });
+
+    return files.map((filePath) => {
+      const srcFile = new File(filePath);
+      const distFile = this.getDistFile(srcFile);
+
+      this.compile(srcFile, distFile);
+
+      return distFile;
+    });
   }
 
   /**
@@ -198,10 +201,13 @@ class NunjucksTask {
           template +
           "\n{% endblock %}";
       } else {
-        Log.info(`No layout declared in ${srcFile.relativePath()}`);
+        Log.error(`No layout declared in ${srcFile.relativePath()}`);
       }
     }
 
+    Log.feedback(
+      `Compiling ${srcFile.relativePath()} to ${distFile.relativePath()}`
+    );
     const result = this.compiler.renderString(template, data);
     distFile.makeDirectories();
     distFile.write(result);
